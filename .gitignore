@@ -9,3 +9,4 @@ practice*.py
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+PROJECT_CONTEXT.md
