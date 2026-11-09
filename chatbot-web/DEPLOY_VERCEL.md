@@ -51,7 +51,7 @@ Si tus datos están actualmente en el contenedor Docker local (`localhost:5432`)
    - `GEMINI_API_KEY`: Tu clave de API de Google AI Studio.
    - `POSTGRES_URL`: La URL de tu base de datos PostgreSQL (ej: la de Neon o Supabase con `?sslmode=require`).
    - `POSTGRES_SSL`: `true` (para bases en la nube que requieren SSL).
-   - *(Opcional)* `GEMINI_MODEL`: `gemini-2.0-flash` (por defecto usa este modelo ultra rápido).
+   - *(Opcional)* `GEMINI_MODEL`: `gemini-3.1-flash-lite` (por defecto usa `gemini-3.1-flash-lite`, ultra rápido y con soporte completo de function calling).
 6. Hacé clic en **"Deploy"**. En ~1 minuto tendrás tu URL pública (ej: `https://anomaly-pipeline-chatbot.vercel.app`).
 
 ---

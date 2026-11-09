@@ -246,15 +246,36 @@ export async function processChat(
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+  const primaryModelName = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
+
+  let model = genAI.getGenerativeModel({
+    model: primaryModelName,
     systemInstruction: SYSTEM_INSTRUCTION,
     tools: [{ functionDeclarations }],
   });
 
-  const chat = model.startChat({ history });
+  let chat = model.startChat({ history });
+  let result;
+  try {
+    result = await chat.sendMessage(userMessage);
+  } catch (error: unknown) {
+    const fallbackModelName =
+      primaryModelName === "gemini-3.1-flash-lite"
+        ? "gemini-3-flash-preview"
+        : "gemini-3.1-flash-lite";
+    console.warn(
+      `[Gemini] Falló el modelo '${primaryModelName}'. Intentando con fallback '${fallbackModelName}'...`,
+      error instanceof Error ? error.message : error,
+    );
+    model = genAI.getGenerativeModel({
+      model: fallbackModelName,
+      systemInstruction: SYSTEM_INSTRUCTION,
+      tools: [{ functionDeclarations }],
+    });
+    chat = model.startChat({ history });
+    result = await chat.sendMessage(userMessage);
+  }
 
-  let result = await chat.sendMessage(userMessage);
   let response = result.response;
 
   const visualizations: Visualization[] = [];

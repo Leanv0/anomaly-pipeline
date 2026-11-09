@@ -73,14 +73,22 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    // Registro detallado en logs internos del servidor (seguro, no visible al público)
     console.error("[SECURITY] Error interno en /api/chat:", error);
 
-    // Respuesta sanitizada al cliente para prevenir Information Disclosure
-    const userSafeMessage =
-      error instanceof Error && error.message.includes("GEMINI_API_KEY")
-        ? error.message
-        : "Ocurrió un error al procesar tu consulta con el sistema de análisis. Por favor, reintentá en unos momentos.";
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    let userSafeMessage = "Ocurrió un error al procesar tu consulta con el sistema de análisis.";
+
+    if (rawMessage.includes("503") || rawMessage.includes("high demand") || rawMessage.includes("UNAVAILABLE")) {
+      userSafeMessage = "El modelo de Gemini está experimentando alta demanda temporaria. Por favor reintentá en unos segundos.";
+    } else if (rawMessage.includes("429") || rawMessage.includes("Quota") || rawMessage.includes("RESOURCE_EXHAUSTED")) {
+      userSafeMessage = "Se ha superado la cuota de peticiones de la API de Gemini (Rate Limit). Aguardá un instante.";
+    } else if (rawMessage.includes("GEMINI_API_KEY") || rawMessage.includes("API key not valid")) {
+      userSafeMessage = "La clave GEMINI_API_KEY no es válida. Podés actualizarla desde el botón ⚙️ Configuración.";
+    } else if (rawMessage.includes("ETIMEDOUT") || rawMessage.includes("ECONNREFUSED") || rawMessage.includes("timeout")) {
+      userSafeMessage = "Tiempo de conexión agotado al consultar la base de datos PostgreSQL.";
+    } else if (process.env.NODE_ENV !== "production") {
+      userSafeMessage = `Error interno: ${rawMessage}`;
+    }
 
     return NextResponse.json(
       { error: userSafeMessage },

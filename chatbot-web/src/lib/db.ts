@@ -7,17 +7,27 @@
 
 import { Pool, QueryResultRow } from "pg";
 
-const sslConfig =
-  process.env.POSTGRES_SSL === "true"
-    ? { rejectUnauthorized: false }
-    : false;
+const connectionString = process.env.POSTGRES_URL || "";
+const isCloudOrSsl =
+  process.env.POSTGRES_SSL === "true" ||
+  connectionString.includes("sslmode=require") ||
+  connectionString.includes("neon.tech") ||
+  connectionString.includes("supabase.co") ||
+  connectionString.includes("supabase.com");
+
+const sslConfig = isCloudOrSsl ? { rejectUnauthorized: false } : false;
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
   ssl: sslConfig,
-  max: 5,
-  idleTimeoutMillis: 30_000,
+  max: 3,
+  idleTimeoutMillis: 10_000,
   connectionTimeoutMillis: 10_000,
+});
+
+// Evitar que errores no capturados en conexiones inactivas terminen el proceso en Node.js/Vercel
+pool.on("error", (err) => {
+  console.warn("[PostgreSQL Pool] Advertencia en conexión inactiva:", err.message);
 });
 
 /**

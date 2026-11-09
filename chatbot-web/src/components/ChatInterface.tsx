@@ -53,8 +53,19 @@ export default function ChatInterface() {
     setIsCheckingHealth(true);
     try {
       const res = await fetch("/api/health");
-      const data = await res.json();
-      setHealth(data);
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await res.json();
+        setHealth(data);
+      } else {
+        const text = await res.text();
+        setHealth({
+          status: "offline",
+          postgresConnected: false,
+          geminiConfigured: false,
+          error: text || `Error HTTP ${res.status}`,
+        });
+      }
     } catch {
       setHealth({
         status: "offline",
@@ -139,10 +150,20 @@ export default function ChatInterface() {
         }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type");
+      let data: any = null;
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(
+          text || `El servidor respondió con código ${response.status} (${response.statusText})`
+        );
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || data.details || "Error en la consulta");
+        throw new Error(data?.error || data?.details || "Error en la consulta");
       }
 
       const assistantMessage: Message = {
