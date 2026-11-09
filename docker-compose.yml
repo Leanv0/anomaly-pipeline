@@ -1,0 +1,107 @@
+# docker-compose.yml — Servicios de infraestructura del pipeline
+#
+# Servicios actuales:
+#   - rustfs: datalake S3 local (Paso 4)
+#   - postgres: base de datos relacional para alertas y métricas (Paso 5)
+#   - grafana: visualización y monitoreo de seguridad / SOC (Paso 9)
+#
+# Las credenciales se leen del archivo .env (que NO se versiona en Git).
+# Para arrancar:  docker compose up -d
+# Para parar:     docker compose down
+# Para ver logs:  docker compose logs -f <servicio>
+
+services:
+
+  rustfs:
+    # Imagen oficial de RustFS — object storage compatible con la API S3.
+    image: rustfs/rustfs:latest
+    container_name: rustfs
+
+    # Comando que le dice a RustFS:
+    #   server /data        → usá /data como directorio de almacenamiento
+    #   --console-address   → levantá la consola web en el puerto 9001
+    command: server /data --console-address ":9001"
+
+    ports:
+      # Puerto 9000: API S3 — acá apunta boto3 con endpoint_url
+      - "9000:9000"
+      # Puerto 9001: consola web — para ver buckets y objetos en el navegador
+      - "9001:9001"
+
+    environment:
+      # Credenciales del administrador. Son las que usa boto3 para autenticarse.
+      # Las lee del archivo .env (Docker Compose lo carga automáticamente).
+      RUSTFS_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${STORAGE_SECRET_KEY}
+
+    volumes:
+      # Named volume: los datos persisten aunque bajes el contenedor.
+      - rustfs_data:/data
+
+    restart: unless-stopped
+
+  postgres:
+    # Usamos la imagen oficial de PostgreSQL basada en Alpine Linux:
+    # es súper liviana (~100 MB) y rápida de descargar.
+    image: postgres:16-alpine
+    container_name: postgres
+
+    ports:
+      # Puerto estándar de PostgreSQL (host:contenedor)
+      # Permite que scripts de Python en tu máquina (localhost:5432) se conecten.
+      - "5432:5432"
+
+    environment:
+      # Variables que la imagen oficial de PostgreSQL lee en su primer arranque
+      # para inicializar el superusuario, la contraseña y la base de datos por defecto.
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    volumes:
+      # Ruta interna donde PostgreSQL almacena las tablas y datos (/var/lib/postgresql/data).
+      # Usamos un named volume para que la base sobreviva a un `docker compose down`.
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+  grafana:
+    # Imagen oficial de Grafana para visualización y dashboards de monitoreo
+    image: grafana/grafana:latest
+    container_name: grafana
+
+    ports:
+      # Puerto 3000: Interfaz web de Grafana (acceso vía navegador en http://localhost:3000)
+      - "3000:3000"
+
+    environment:
+      # Credenciales de administración iniciales (estrictamente requeridas desde .env)
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      # Desactiva el autoregistro de usuarios nuevos (principio de menor privilegio)
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # Desactiva el acceso anónimo: exige autenticación estricta con credenciales
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      # Variables de conexión pasadas al contenedor para que el archivo
+      # postgres.yaml pueda interpolar ${POSTGRES_DB}, etc.
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+    volumes:
+      # Named volume: almacena dashboards creados, configuraciones y plugins
+      - grafana_data:/var/lib/grafana
+      # Bind-mount: monta la carpeta local de provisioning como solo lectura (:ro)
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+
+    # Asegura que PostgreSQL se levante antes que Grafana
+    depends_on:
+      - postgres
+
+    restart: unless-stopped
+
+# Declaración de volúmenes con nombre (named volumes)
+volumes:
+  rustfs_data:
+  postgres_data:
+  grafana_data:

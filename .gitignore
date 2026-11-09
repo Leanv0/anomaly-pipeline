@@ -8,5 +8,10 @@ practice*.py
 
 __pycache__/
 *.pyc
+logs/
+.pytest_cache/
 .ipynb_checkpoints/
 PROJECT_CONTEXT.md
+.env*.local
+node_modules/
+.next/

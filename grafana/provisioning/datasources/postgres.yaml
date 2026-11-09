@@ -1,0 +1,33 @@
+# grafana/provisioning/datasources/postgres.yaml
+# Provisioning automático del Data Source de PostgreSQL para Grafana.
+#
+# Concepto clave: "Datasource as Code"
+# En lugar de configurar la conexión manualmente en la interfaz web de Grafana,
+# dejamos este archivo en el repositorio. Al arrancar el contenedor, Grafana lo
+# lee automáticamente y crea la conexión lista para usar.
+#
+# Las variables ${POSTGRES_...} se expanden automáticamente desde las variables
+# de entorno del contenedor (inyectadas por Docker Compose desde el archivo .env).
+
+apiVersion: 1
+
+datasources:
+  - name: PostgreSQL-Alerts
+    uid: postgres-alerts
+    type: postgres
+    access: proxy
+    # Host y puerto del contenedor de PostgreSQL en la red interna de Docker
+    url: postgres:5432
+    database: ${POSTGRES_DB}
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      # Base de datos preconfigurada para el conector moderno grafana-postgresql-datasource
+      database: ${POSTGRES_DB}
+      # 'disable' porque la conexión viaja por la red interna y aislada de Docker
+      sslmode: 'disable'
+      # PostgreSQL 16 (1600 en formato numérico de Grafana)
+      postgresVersion: 1600
+    isDefault: true
+    editable: true

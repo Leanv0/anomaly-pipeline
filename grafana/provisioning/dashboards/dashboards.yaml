@@ -1,0 +1,18 @@
+# grafana/provisioning/dashboards/dashboards.yaml
+# Provisioning automático de Dashboards para Grafana (Dashboard as Code)
+#
+# Le indica a Grafana que busque archivos de dashboards en formato JSON
+# dentro de /etc/grafana/provisioning/dashboards/json y los importe automáticamente.
+
+apiVersion: 1
+
+providers:
+  - name: 'Security Operations'
+    orgId: 1
+    folder: 'SOC Overview'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

@@ -1,0 +1,18 @@
+# Dependencias
+/node_modules
+
+# Next.js build
+/.next/
+/out/
+
+# Producción
+/build
+
+# Secretos locales
+.env*.local
+
+# Varios
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+.neon
