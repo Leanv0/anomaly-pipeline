@@ -18,15 +18,15 @@ import boto3
 
 load_dotenv()
 
-STORAGE_ENDPOINT = os.getenv("STORAGE_ENDPOINT", "http://localhost:9000")
-STORAGE_ACCESS_KEY = os.getenv("STORAGE_ACCESS_KEY", "rustfsadmin")
-STORAGE_SECRET_KEY = os.getenv("STORAGE_SECRET_KEY", "rustfsadmin")
+STORAGE_ENDPOINT = os.environ["STORAGE_ENDPOINT"]
+STORAGE_ACCESS_KEY = os.environ["STORAGE_ACCESS_KEY"]
+STORAGE_SECRET_KEY = os.environ["STORAGE_SECRET_KEY"]
 
 DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME = os.getenv("POSTGRES_DB", "anomalydb")
-DB_USER = os.getenv("POSTGRES_USER", "postgres")
-DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
+DB_NAME = os.environ["POSTGRES_DB"]
+DB_USER = os.environ["POSTGRES_USER"]
+DB_PASSWORD = os.environ["POSTGRES_PASSWORD"]
 
 
 def reset_database():

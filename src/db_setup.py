@@ -10,7 +10,6 @@ import logging
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 import psycopg
-from psycopg import sql
 
 logger = logging.getLogger(__name__)
 

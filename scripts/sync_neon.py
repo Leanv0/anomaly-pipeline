@@ -6,11 +6,15 @@ y migra las tablas alerts y pipeline_runs desde PostgreSQL local (Docker) hacia 
 import os
 import sys
 import time
+from pathlib import Path
 import psycopg
 from dotenv import load_dotenv
 
+# Raíz del proyecto (un nivel arriba de scripts/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 # Cargar variables locales de anomaly-pipeline (.env)
-load_dotenv("/home/lea/Desktop/projects/anomaly-pipeline/.env")
+load_dotenv(PROJECT_ROOT / ".env")
 LOCAL_HOST = os.getenv("POSTGRES_HOST", "localhost")
 LOCAL_PORT = os.getenv("POSTGRES_PORT", "5432")
 LOCAL_DB = os.getenv("POSTGRES_DB", "anomaly_db")
@@ -18,7 +22,7 @@ LOCAL_USER = os.getenv("POSTGRES_USER", "anomaly_user")
 LOCAL_PASS = os.getenv("POSTGRES_PASSWORD", "")
 
 # Cargar variables de Neon de chatbot-web/.env.local
-load_dotenv("/home/lea/Desktop/projects/anomaly-pipeline/chatbot-web/.env.local", override=True)
+load_dotenv(PROJECT_ROOT / "chatbot-web" / ".env.local", override=True)
 NEON_URL = os.getenv("POSTGRES_URL")
 
 if not NEON_URL or "neon.tech" not in NEON_URL:
