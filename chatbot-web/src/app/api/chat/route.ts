@@ -6,8 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { processChat } from "@/lib/gemini";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-// Permitir hasta 30 segundos de ejecución (function calling + DB queries)
-export const maxDuration = 30;
+// Permitir hasta 60 segundos de ejecución para function calling
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {

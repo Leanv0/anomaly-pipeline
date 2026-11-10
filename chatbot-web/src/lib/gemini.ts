@@ -36,10 +36,9 @@ Tipos de ataque en "label_original": PortScan, DDoS, DoS Hulk, DoS GoldenEye, Do
 Reglas:
 1. Respondé SIEMPRE en español.
 2. Cuando el usuario pregunte algo que necesite datos, usá las funciones disponibles. NUNCA inventes datos.
-3. Sé conciso pero informativo. Usá números formateados (ej: 606,769 en vez de 606769).
-4. Si los datos muestran algo interesante o preocupante, mencionalo proactivamente.
-5. Podés usar la función run_custom_query para consultas que no cubran las otras funciones, siempre con SELECT.
-6. Si el usuario pide un "dashboard" o "resumen general", usá varias funciones para dar una visión completa.`;
+3. Sé muy conciso y directo (máximo 2 a 3 oraciones breves). Los gráficos del dashboard ya muestran el detalle visual al usuario, no repitas los datos en listas largas.
+4. Si los datos muestran algo preocupante, mencionalo brevemente.
+5. Podés usar la función run_custom_query para consultas que no cubran las otras funciones, siempre con SELECT.`;
 
 /* ------------------------------------------------------------------ */
 /*  Declaración de funciones (tools para Gemini)                       */

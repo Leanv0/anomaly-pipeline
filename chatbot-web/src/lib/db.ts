@@ -25,8 +25,8 @@ const sslConfig = isCloudOrSsl ? { rejectUnauthorized: false } : false;
 const pool = new Pool({
   connectionString,
   ssl: sslConfig,
-  max: 1, // En serverless una instancia maneja una petición a la vez
-  idleTimeoutMillis: 1_000, // Cerrar sockets inactivos rápido para evitar conexiones congeladas en Vercel
+  max: 3,
+  idleTimeoutMillis: 5_000,
   connectionTimeoutMillis: 10_000,
   allowExitOnIdle: true,
 });
