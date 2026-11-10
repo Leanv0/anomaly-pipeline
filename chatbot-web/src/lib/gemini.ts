@@ -246,7 +246,7 @@ export async function processChat(
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const primaryModelName = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
+  const primaryModelName = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
 
   let model = genAI.getGenerativeModel({
     model: primaryModelName,
@@ -260,9 +260,9 @@ export async function processChat(
     result = await chat.sendMessage(userMessage);
   } catch (error: unknown) {
     const fallbackModelName =
-      primaryModelName === "gemini-3.1-flash-lite"
-        ? "gemini-3-flash-preview"
-        : "gemini-3.1-flash-lite";
+      primaryModelName === "gemini-3-flash-preview"
+        ? "gemini-3.1-flash-lite"
+        : "gemini-3-flash-preview";
     console.warn(
       `[Gemini] Falló el modelo '${primaryModelName}'. Intentando con fallback '${fallbackModelName}'...`,
       error instanceof Error ? error.message : error,
@@ -280,9 +280,9 @@ export async function processChat(
 
   const visualizations: Visualization[] = [];
 
-  // Loop de function calling: Gemini puede encadenar múltiples llamadas
+  // Loop de function calling: máximo 3 llamadas encadenadas para evitar timeouts
   let iterations = 0;
-  const MAX_ITERATIONS = 5;
+  const MAX_ITERATIONS = 3;
 
   while (response.functionCalls()?.length && iterations < MAX_ITERATIONS) {
     iterations++;

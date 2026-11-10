@@ -64,6 +64,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (message.length > 500) {
+      return NextResponse.json(
+        { error: "El mensaje es demasiado extenso. Por favor ingresá consultas de menos de 500 caracteres." },
+        { status: 400 },
+      );
+    }
+
     // 3. Procesamiento seguro con Gemini y PostgreSQL
     const result = await processChat(message.trim(), history || [], resolvedApiKey);
 

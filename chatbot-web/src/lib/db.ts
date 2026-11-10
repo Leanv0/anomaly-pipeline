@@ -25,9 +25,10 @@ const sslConfig = isCloudOrSsl ? { rejectUnauthorized: false } : false;
 const pool = new Pool({
   connectionString,
   ssl: sslConfig,
-  max: 3,
-  idleTimeoutMillis: 10_000,
-  connectionTimeoutMillis: 20_000,
+  max: 1, // En serverless una instancia maneja una petición a la vez
+  idleTimeoutMillis: 1_000, // Cerrar sockets inactivos rápido para evitar conexiones congeladas en Vercel
+  connectionTimeoutMillis: 10_000,
+  allowExitOnIdle: true,
 });
 
 // Evitar que errores no capturados en conexiones inactivas terminen el proceso en Node.js/Vercel
@@ -45,9 +46,12 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   const client = await pool.connect();
   try {
     const result = await client.query<T>(text, params);
-    return result.rows;
-  } finally {
     client.release();
+    return result.rows;
+  } catch (error) {
+    // Si la consulta falla (ej: socket congelado en Vercel), destruir el cliente para forzar uno nuevo
+    client.release(true);
+    throw error;
   }
 }
 

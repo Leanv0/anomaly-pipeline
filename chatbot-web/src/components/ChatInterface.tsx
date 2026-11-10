@@ -133,11 +133,13 @@ export default function ChatInterface() {
     setIsLoading(true);
 
     try {
+      // Conservar solo los últimos 3 mensajes para mantener la conversación ligera y evitar timeouts
       const history = messages
         .filter((m) => m.id !== "welcome" && !m.id.startsWith("error-"))
+        .slice(-3)
         .map((m) => ({
           role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }],
+          parts: [{ text: m.content.slice(0, 600) }],
         }));
 
       const response = await fetch("/api/chat", {
