@@ -224,6 +224,35 @@ export interface ChatResult {
 }
 
 /**
+ * Envía un mensaje en la sesión de chat con reintento automático ante picos temporarios (503).
+ */
+async function sendWithRetry(
+  chat: { sendMessage: (msg: string | Part[]) => Promise<any> },
+  message: string | Part[],
+  maxRetries = 2,
+) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await chat.sendMessage(message);
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const isTransient =
+        msg.includes("503") ||
+        msg.includes("high demand") ||
+        msg.includes("UNAVAILABLE");
+
+      if (isTransient && attempt < maxRetries) {
+        console.warn(`[Gemini] Error 503 detectado. Reintentando en 800ms (intento ${attempt + 1}/${maxRetries})...`);
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("No fue posible conectar con Gemini tras reintentos.");
+}
+
+/**
  * Procesa un mensaje del usuario a través de Gemini con function calling.
  *
  * Flujo:
@@ -256,7 +285,7 @@ export async function processChat(
   let chat = model.startChat({ history });
   let result;
   try {
-    result = await chat.sendMessage(userMessage);
+    result = await sendWithRetry(chat, userMessage);
   } catch (error: unknown) {
     const fallbackModelName =
       primaryModelName === "gemini-3-flash-preview"
@@ -272,7 +301,7 @@ export async function processChat(
       tools: [{ functionDeclarations }],
     });
     chat = model.startChat({ history });
-    result = await chat.sendMessage(userMessage);
+    result = await sendWithRetry(chat, userMessage);
   }
 
   let response = result.response;
@@ -329,12 +358,19 @@ export async function processChat(
       }
     }
 
-    result = await chat.sendMessage(functionResponses);
+    result = await sendWithRetry(chat, functionResponses);
     response = result.response;
   }
 
+  let messageText = "";
+  try {
+    messageText = response.text();
+  } catch {
+    messageText = "Resumen de datos generado con éxito.";
+  }
+
   return {
-    message: response.text(),
+    message: messageText,
     visualizations,
   };
 }
