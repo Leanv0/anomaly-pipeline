@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 export async function GET() {
   const hasEnvPostgres = Boolean(process.env.POSTGRES_URL);
@@ -19,7 +20,7 @@ export async function GET() {
         status: "misconfigured",
         postgresConnected: false,
         geminiConfigured: hasEnvGemini,
-        error: "POSTGRES_URL no está configurada en las variables de entorno.",
+        error: "POSTGRES_URL no está configurada en las variables de entorno de Vercel.",
       },
       { status: 503 },
     );
@@ -48,11 +49,7 @@ export async function GET() {
     console.error("[SECURITY] Error en health check de PostgreSQL:", error);
 
     const safeMessage =
-      process.env.NODE_ENV === "production"
-        ? "No se pudo establecer comunicación con el servicio de base de datos."
-        : error instanceof Error
-        ? error.message
-        : "Error al conectar a PostgreSQL";
+      error instanceof Error ? error.message : "Error al conectar a PostgreSQL";
 
     return NextResponse.json(
       {

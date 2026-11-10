@@ -7,7 +7,12 @@
 
 import { Pool, QueryResultRow } from "pg";
 
-const connectionString = process.env.POSTGRES_URL || "";
+let rawConnectionString = (process.env.POSTGRES_URL || "").trim().replace(/^["']|["']$/g, "");
+// Remover channel_binding ya que node-postgres en serverless puede fallar en SCRAM
+const connectionString = rawConnectionString
+  .replace(/([?&])channel_binding=[^&]+(&|$)/, "$1")
+  .replace(/[?&]$/, "");
+
 const isCloudOrSsl =
   process.env.POSTGRES_SSL === "true" ||
   connectionString.includes("sslmode=require") ||
@@ -18,11 +23,11 @@ const isCloudOrSsl =
 const sslConfig = isCloudOrSsl ? { rejectUnauthorized: false } : false;
 
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
+  connectionString,
   ssl: sslConfig,
   max: 3,
   idleTimeoutMillis: 10_000,
-  connectionTimeoutMillis: 10_000,
+  connectionTimeoutMillis: 20_000,
 });
 
 // Evitar que errores no capturados en conexiones inactivas terminen el proceso en Node.js/Vercel
